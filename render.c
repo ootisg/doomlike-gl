@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 float last_frame = 0;
 float delta_time = -1;
@@ -51,12 +52,14 @@ scene* init_scene (void* loc) {
 	matrix_print4 (&sample);
 	matrix_inverse4 (&result, &sample);
 	scene* ptr = (scene*)loc;
+	int MAX_OBJS = 128;
 	ptr->num_objs = 0;
-	ptr->vaos = malloc (sizeof (void*) * 128);
-	ptr->programs = malloc (sizeof (void*) * 128);
-	ptr->models = malloc (sizeof (mat4) * 128);
-	ptr->mesh_sizes = malloc (sizeof (int*) * 128);
-	ptr->materials = malloc (sizeof (material) * 128);
+	ptr->vaos = malloc (sizeof (void*) * MAX_OBJS);
+	ptr->programs = malloc (sizeof (void*) * MAX_OBJS);
+	ptr->models = malloc (sizeof (mat4) * MAX_OBJS);
+	ptr->mesh_sizes = malloc (sizeof (int*) * MAX_OBJS);
+	ptr->materials = malloc (sizeof (material) * MAX_OBJS);
+	ptr->obj_names = malloc (sizeof (char*) * MAX_OBJS);
 	lightPos[0] = 3.0;
 	lightPos[1] = 1.0;
 	lightPos[2] = 3.0;

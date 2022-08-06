@@ -88,6 +88,9 @@ vec3 calcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
 
 void main() {
 	
+	if (texture (material.diffuse, texturePos).w == 0) {
+		discard;
+	}
 	vec3 viewDir = normalize (eyePos - fragPos);
 	vec3 lighting = vec3 (0.0);
 	lighting += calcDirLight (dirLight, correctedNormal, viewDir);

@@ -1,3 +1,2 @@
-# doomlike-gl
-Making a doomlike game (base code from my other repository, learning-opengl)
-To build with the makefile as-is, a folder named include must be added to the same directory. Header dependencies can be placed there. Dependancies are GLEW and GLFW3; stb_image.h is also a dependancy but is included in the repo.
+# Learning-OpenGL
+Learning OpenGL, following along with the tutorial at https://learnopengl.com/Getting-started/OpenGL (tutorial by Joey de Vries, https://twitter.com/JoeyDeVriez)

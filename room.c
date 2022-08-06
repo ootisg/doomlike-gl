@@ -122,6 +122,7 @@ void init_floor (scene* render_scene) {
 		glBindVertexArray (render_scene->vaos[idx]);
 		VBO* vertex_vbo = VBO_init (malloc (sizeof (VBO)), (i == 0 ? floor_vertices : ceiling_vertices), sizeof (floor_vertices), GL_ARRAY_BUFFER);
 		render_scene->mesh_sizes[render_scene->num_objs] = 4;
+		render_scene->obj_names[render_scene->num_objs] = (i == 0 ? "floor" : "ceiling");
 		if (i == 0) {
 			//Floor material
 			init_material (&(render_scene->materials[render_scene->num_objs]), "resources/floor_diffuse.jpg", "resources/floor_specular.png");
@@ -233,6 +234,7 @@ void import_walls (scene* render_scene, char* path) {
 				VBO* vertex_vbo = VBO_init (malloc (sizeof (VBO)), vert_arr, num_verts * sizeof (float) * 8 * 2, GL_ARRAY_BUFFER);
 				printf ("MATERIAL ID: %d\n", abs (wall_idx) - 1);
 				render_scene->materials[render_scene->num_objs] = wall_mats[abs (wall_idx) - 1];
+				render_scene->obj_names[render_scene->num_objs] = "wall_strip";
 				glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 				glEnableVertexAttribArray (0);
 				glVertexAttribPointer (1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof (float)));
