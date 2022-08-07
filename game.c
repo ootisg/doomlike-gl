@@ -8,6 +8,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+
+#include <GLFW/glfw3.h>
 
 #define MAX_ENEMIES 128
 #define MAX_ITEMS 128
@@ -33,6 +36,7 @@ game_object* decoration_list = NULL;
 int num_decorations = 0;
 
 game_object* door_list = NULL;
+float* door_timers = NULL;
 int num_doors = 0;
 
 void printfloats (float* loc, int amt) {
@@ -65,6 +69,29 @@ void game_logic_step (scene* s) {
 	for (i = 0; i < num_items; i++) {
 		billboard (&(item_list[i]), s, 2, 2);
 	}
+	for (i = 0; i < num_doors; i++) {
+		
+		//Activate doors when nearby
+		camera* cam = get_active_camera ();
+		game_object* curr = &(door_list[i]);
+		double dist = sqrt ((cam->pos.x - curr->x) * (cam->pos.x - curr->x) + (cam->pos.z - curr->y) * (cam->pos.z - curr->y));
+		if (dist < 1 && door_timers[i] == -1) {
+			door_timers[i] = glfwGetTime ();
+		}
+		
+		//Animate doors going away
+		if (door_timers[i] != -1) {
+			float elapsed = glfwGetTime () - door_timers[i];
+			if (elapsed > 5.1) {
+				//Door is done
+			} else {
+				float y_offs = (elapsed / 5) * 2;
+				int rid = door_list[i].render_obj_id;
+				matrix_trans4 (&(s->models[rid]), 0, -elapsed, 0);
+			}
+		}
+		
+	}
 }
 
 //Object-specific functions
@@ -94,7 +121,7 @@ game_object* init_enemy (scene* s, float x, float y) {
 
 game_object* init_barrel (scene* s, float x, float y) {
 	
-	//Init enemy material/list if not initialized
+	//Init barrel list if not initialized
 	if (barrel_list == NULL) {
 		barrel_list = malloc (sizeof (game_object) * MAX_BARRELS);
 	}
@@ -115,7 +142,7 @@ game_object* init_barrel (scene* s, float x, float y) {
 
 game_object* init_item (scene* s, material* mat, void* callback, float x, float y) {
 	
-	//Init enemy material/list if not initialized
+	//Init item list if not initialized
 	if (item_list == NULL) {
 		item_list = malloc (sizeof (game_object) * MAX_ITEMS);
 	}
@@ -137,7 +164,7 @@ game_object* init_item (scene* s, material* mat, void* callback, float x, float 
 
 game_object* init_decoration (scene* s, material* mat, float x, float y) {
 	
-	//Init enemy material/list if not initialized
+	//Init decoration list if not initialized
 	if (decoration_list == NULL) {
 		decoration_list = malloc (sizeof (game_object) * MAX_DECORATIONS);
 	}
@@ -153,7 +180,64 @@ game_object* init_decoration (scene* s, material* mat, float x, float y) {
 }
 
 //TODO init_door
-
+game_object* init_door (scene* s, int door_type, float x1, float y1, float x2, float y2) {
+	
+	//Init door material/list if not initialized
+	if (door_list == NULL) {
+		door_list = malloc (sizeof (game_object) * MAX_DOORS);
+		door_timers = malloc (sizeof (float) * MAX_DOORS);
+	}
+	if (door_material == NULL) {
+		door_material = malloc (sizeof (material));
+		init_material (door_material, "resources/door.png", "resources/theme_5_specular.png");
+	}
+	
+	//Allocate decoration
+	door_timers[num_doors] = -1;
+	game_object* tobj = &(door_list[num_doors++]);
+	//Initialize decoration
+	init_game_object (tobj, s, door_material, 4, -1);
+	tobj->x = (x1 + x2) / 2;
+	tobj->y = (y1 + y2) / 2;
+	
+	//Fill vertex data
+	float* buffer = malloc (sizeof (float) * 8 * 4);
+	camera* cam = get_active_camera ();
+	v3 offs, dir, perp, normal, obj_pos, up;
+	initv3 (&up, 0, 1, 0);
+	initv3 (&dir, x2 - x1, 0, y2 - y1);
+	vector_normalize3 (&dir, &dir);
+	vector_cross3 (&perp, &up, &dir);
+	initv3 (&normal, perp.x, perp.y, perp.z);
+	int i;
+	for (i = 0; i < 2; i++) {
+		//Vert 1 and 3
+		buffer[i * 16 + 0] = i == 0 ? x1 : x2;
+		buffer[i * 16 + 1] = 0;
+		buffer[i * 16 + 2] = i == 0 ? y1 : y2;
+		buffer[i * 16 + 3] = normal.x;
+		buffer[i * 16 + 4] = normal.y;
+		buffer[i * 16 + 5] = normal.z;
+		buffer[i * 16 + 6] = i;
+		buffer[i * 16 + 7] = 0;
+		//Vert 2 and 4
+		buffer[i * 16 + 8] = i == 0 ? x1 : x2;
+		buffer[i * 16 + 9] = 2;
+		buffer[i * 16 + 10] = i == 0 ? y1 : y2;
+		buffer[i * 16 + 11] = normal.x;
+		buffer[i * 16 + 12] = normal.y;
+		buffer[i * 16 + 13] = normal.z;
+		buffer[i * 16 + 14] = i;
+		buffer[i * 16 + 15] = 1;
+	}
+	int rid = tobj->render_obj_id;
+	GLuint vao_id = s->vaos[rid];
+	glBindBuffer (GL_ARRAY_BUFFER, s->vbos[rid]);
+	glBufferData (GL_ARRAY_BUFFER, sizeof (float) * 8 * 4, buffer, GL_STATIC_DRAW);
+	free (buffer);
+	return tobj;
+	
+}
 
 //Game object functions
 game_object* init_game_object (void* loc, scene* s, material* mat, int num_vertices, int render_obj_id) {
@@ -192,7 +276,7 @@ game_object* init_game_object (void* loc, scene* s, material* mat, int num_verti
 	glVertexAttribPointer (2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof (float)));
 	glEnableVertexAttribArray (2);
 	//Initialize the model matrix to the identity matrix
-	matrix_trans4 (&(s->models[rid]), 33, 1, 33);
+	matrix_trans4 (&(s->models[rid]), 0, 0, 0);
 	
 	//Default parameters
 	obj->is_animated = 0;

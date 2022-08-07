@@ -261,7 +261,7 @@ void import_objs (scene* render_scene, char* path) {
 	init_material (&dmg_mat, "resources/dmg.png", "resources/theme_5_specular.png");
 	
 	FILE* file = fopen (path, "r");
-	int ret, x, z, obj_id, num_pts;
+	int ret, x, z, x2, z2, obj_id, num_pts;
 	while (1) {
 		
 		//EOF check and obj id scan
@@ -274,12 +274,11 @@ void import_objs (scene* render_scene, char* path) {
 			fscanf (file, "%d", &x);
 			fscanf (file, "%d", &z);
 		} else {
-			fscanf (file, "%d", &num_pts);
-			int i;
-			for (i = 0; i < num_pts; i++) {
-				fscanf (file, "%d", &x);
-				fscanf (file, "%d", &z);
-			}
+			fscanf (file, "%d", &num_pts); //Unused, vertex count is redundant
+			fscanf (file, "%d", &x);
+			fscanf (file, "%d", &z);
+			fscanf (file, "%d", &x2);
+			fscanf (file, "%d", &z2);
 		}
 		
 		float fx, fz;
@@ -290,7 +289,7 @@ void import_objs (scene* render_scene, char* path) {
 				init_enemy (render_scene, fx, fz);
 				break;
 			case 2:
-				//TODO door
+				init_door (render_scene, 0, fx, fz, (float)(x2 / 32), (float)(z2 / 32)); //TODO door type parameter
 				break;
 			case 3:
 				init_decoration (render_scene, &plant_mat, fx, fz);

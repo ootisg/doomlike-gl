@@ -35,5 +35,6 @@ game_object* init_enemy (scene* s, float x, float y);
 game_object* init_barrel (scene* s, float x, float y);
 game_object* init_item (scene* s, material* mat, void* callback, float x, float y);
 game_object* init_decoration (scene* s, material* mat, float x, float y);
+game_object* init_door (scene* s, int door_type, float x1, float y1, float x2, float y2);
 
 #endif
