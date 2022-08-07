@@ -106,13 +106,6 @@ float ceiling_vertices[] = {
 	100.0f,  2.0f, 100.0f, 0.0f, -1.0f, 0.0f, 100.0f, 100.0f
 };
 
-void printfloats (float* loc, int amt) {
-	int i;
-	for (i = 0; i < amt; i++) {
-		printf ("INDEX %d: %f\n", i, loc[i]);
-	}
-}
-
 void init_floor (scene* render_scene) {
 	int i;
 	for (i = 0; i < 2; i++) {
@@ -121,6 +114,7 @@ void init_floor (scene* render_scene) {
 		glGenVertexArrays (1, &(render_scene->vaos[idx]));
 		glBindVertexArray (render_scene->vaos[idx]);
 		VBO* vertex_vbo = VBO_init (malloc (sizeof (VBO)), (i == 0 ? floor_vertices : ceiling_vertices), sizeof (floor_vertices), GL_ARRAY_BUFFER);
+		render_scene->vbos[render_scene->num_objs] = vertex_vbo->buffer_id;
 		render_scene->mesh_sizes[render_scene->num_objs] = 4;
 		render_scene->obj_names[render_scene->num_objs] = (i == 0 ? "floor" : "ceiling");
 		if (i == 0) {
@@ -232,6 +226,7 @@ void import_walls (scene* render_scene, char* path) {
 				glGenVertexArrays (1, &(render_scene->vaos[idx]));
 				glBindVertexArray (render_scene->vaos[idx]);
 				VBO* vertex_vbo = VBO_init (malloc (sizeof (VBO)), vert_arr, num_verts * sizeof (float) * 8 * 2, GL_ARRAY_BUFFER);
+				render_scene->vbos[render_scene->num_objs] = vertex_vbo->buffer_id;
 				printf ("MATERIAL ID: %d\n", abs (wall_idx) - 1);
 				render_scene->materials[render_scene->num_objs] = wall_mats[abs (wall_idx) - 1];
 				render_scene->obj_names[render_scene->num_objs] = "wall_strip";

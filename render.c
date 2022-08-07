@@ -55,6 +55,7 @@ scene* init_scene (void* loc) {
 	int MAX_OBJS = 128;
 	ptr->num_objs = 0;
 	ptr->vaos = malloc (sizeof (void*) * MAX_OBJS);
+	ptr->vbos = malloc (sizeof (void*) * MAX_OBJS);
 	ptr->programs = malloc (sizeof (void*) * MAX_OBJS);
 	ptr->models = malloc (sizeof (mat4) * MAX_OBJS);
 	ptr->mesh_sizes = malloc (sizeof (int*) * MAX_OBJS);
@@ -116,6 +117,7 @@ void render_frame (scene* render_scene) {
 		int model_idx = i;
 		glUseProgram (render_scene->programs[model_idx]);
 		glBindVertexArray (render_scene->vaos[model_idx]);
+		glBindBuffer (GL_ARRAY_BUFFER, render_scene->vbos[model_idx]);
 		
 		//Select the correct point light
 		if (i > 0) {

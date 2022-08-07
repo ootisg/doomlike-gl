@@ -20,6 +20,7 @@ struct scene { //TODO for now, this just contains a list of VAOs, a list of prog
 	char** obj_names;
 	int* mesh_sizes;
 	GLuint* vaos;
+	GLuint* vbos;
 	GLuint* programs;
 	material* materials;
 	mat4* models;

@@ -104,7 +104,6 @@ float light_vertices[] = {
     -0.5f,  0.5f,  0.5f,
     -0.5f,  0.5f, -0.5f
 };
-game_object* tobj;
 scene render_scene;
 
 void framebuffer_size_callback (GLFWwindow* window, int width, int height) {
@@ -119,12 +118,10 @@ void init () {
 	init_floor (&render_scene);
 	import_walls (&render_scene, "map.txt");
 	
-	tobj = init_game_object (malloc (sizeof (game_object)), &render_scene, 4, -1);
-	tobj->x = 34;
-	tobj->y = 34;
-	tobj->is_animated = 1;
-	tobj->num_frames = 6;
-	tobj->frame_time = .1;
+	int i;
+	for (i = 0; i < 3; i++) {
+		init_enemy (&render_scene, 34, 34 + i * 2);
+	}
 	
 	/*texture* tex1 = texture_load_from_file (malloc (sizeof (texture)), "resources/container2.png");
 	texture* tex2 = texture_load_from_file (malloc (sizeof (texture)), "resources/container2_specular.png");
@@ -208,7 +205,7 @@ int main () {
 		inputs_register_callbacks (window);
 		
 		//Render
-		billboard (tobj, &render_scene, 2, 2);
+		game_logic_step (&render_scene);
 		render_frame (&render_scene);
 		
 		//Swap buffers and poll events

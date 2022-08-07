@@ -9,6 +9,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_ENEMIES 128
+
+game_object* enemy_list = NULL;
+GLuint* vbo_buffers = NULL;
+int num_enemies = 0;
+material* enemy_material = NULL;
+
+void printfloats (float* loc, int amt) {
+	int i;
+	for (i = 0; i < amt; i++) {
+		printf ("INDEX %d: %f\n", i, loc[i]);
+	}
+}
+
 float obj_verticess[] = {
     // positions          // normals           // texture coords
 	 0.0f,  0.0f,  0.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -17,7 +31,45 @@ float obj_verticess[] = {
      1.0f,  1.0f,  0.0f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f
 };
 
-game_object* init_game_object (void* loc, scene* s, int num_vertices, int render_obj_id) {
+//Game logic
+void game_logic_step (scene* s) {
+	int i;
+	for (i = 0; i < num_enemies; i++) {
+		billboard (&(enemy_list[i]), s, 2, 2);
+	}
+}
+
+//Object-specific functions
+game_object* init_enemy (scene* s, float x, float y) {
+	
+	//Init enemy material/list if not initialized
+	if (enemy_list == NULL) {
+		enemy_list = malloc (sizeof (game_object) * MAX_ENEMIES);
+	}
+	if (vbo_buffers == NULL) {
+		vbo_buffers = malloc (sizeof (game_object) * MAX_ENEMIES);
+	}
+	if (enemy_material == NULL) {
+		enemy_material = malloc (sizeof (material));
+		init_material (enemy_material, "resources/demon_idle.png", "resources/theme_5_specular.png");
+	}
+	
+	//Allocate enemy
+	game_object* tobj = &(enemy_list[num_enemies++]);
+	//Initialize enemy
+	init_game_object (tobj, s, enemy_material, 4, -1);
+	tobj->x = x;
+	tobj->y = y;
+	tobj->is_animated = 1;
+	tobj->num_frames = 6;
+	tobj->frame_time = .1;
+	return tobj;
+	
+}
+
+
+//Game object functions
+game_object* init_game_object (void* loc, scene* s, material* mat, int num_vertices, int render_obj_id) {
 	
 	printf ("%x\n", &(s->num_objs));
 	
@@ -27,7 +79,7 @@ game_object* init_game_object (void* loc, scene* s, int num_vertices, int render
 	//Alloc a render object
 	int rid;
 	if (render_obj_id == -1) {
-		rid = obj->render_obj_id = s->num_objs++; //TODO increment
+		rid = obj->render_obj_id = s->num_objs++;
 	} else {
 		rid = obj->render_obj_id = render_obj_id;
 	}
@@ -42,10 +94,11 @@ game_object* init_game_object (void* loc, scene* s, int num_vertices, int render
 		vertex_buffer[i] = 0;
 	}
 	VBO* vertex_vbo = VBO_init (malloc (sizeof (VBO)), obj_verticess, sizeof (float) * 8 * num_vertices, GL_ARRAY_BUFFER);
+	s->vbos[rid] = vertex_vbo->buffer_id;
 	free (vertex_buffer);
 	s->mesh_sizes[rid] = num_vertices;
 	s->obj_names[rid] = "game_object";
-	init_material (&(s->materials[rid]), "resources/demon_idle.png", "resources/floor_specular.png");
+	s->materials[rid] = *mat;
 	//Attrib ptrs
 	glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray (0);
@@ -116,8 +169,11 @@ void billboard (game_object* obj, scene* s, float width, float height) {
 	
 	//Push the vertex data
 	int rid = obj->render_obj_id;
-	glBindVertexArray (rid);
+	GLuint vao_id = s->vaos[rid];
+	glBindBuffer (GL_ARRAY_BUFFER, s->vbos[rid]);
 	glBufferData (GL_ARRAY_BUFFER, sizeof (float) * 8 * 4, buffer, GL_DYNAMIC_DRAW);
+	glBindVertexArray (0);
+	free (buffer);
 	
 	//Set the model matrix accordingly
 	matrix_trans4 (&(s->models[rid]), obj->x, 0, obj->y);
