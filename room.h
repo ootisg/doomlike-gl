@@ -5,6 +5,7 @@
 
 void init_floor (scene* render_scene);
 void import_walls (scene* render_scene, char* path);
+void import_objs (scene* render_scene, char* path);
 
 v4* get_wall_data ();
 int get_num_walls ();

@@ -45,12 +45,6 @@ float frame_delta_time () {
 
 scene* init_scene (void* loc) {
 	mat4 sample, result;
-	matrix_init4 (&sample, 1, 2, 4, 0,
-						   2, 9, 4, 5,
-						   14, 99, 12, 4,
-						   14, 18, 2, 0);
-	matrix_print4 (&sample);
-	matrix_inverse4 (&result, &sample);
 	scene* ptr = (scene*)loc;
 	int MAX_OBJS = 128;
 	ptr->num_objs = 0;

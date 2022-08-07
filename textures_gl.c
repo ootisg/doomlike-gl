@@ -25,7 +25,6 @@ texture* texture_load_from_file (void* loc, char* file_path) {
 	
 	//Load the image from the given filepath
 	tex->img_data = stbi_load (file_path, &(tex->img_width), &(tex->img_height), &(tex->num_channels), 4);
-	printf ("%d, %d\n", tex->img_width, tex->img_height);
 	
 	//Allocate and bind the OpenGL texture
 	glGenTextures (1, &(tex->texture_id));

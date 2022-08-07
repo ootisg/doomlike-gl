@@ -2,6 +2,7 @@
 #include "buffers_gl.h"
 #include "vector.h"
 #include "char_buffer.h"
+#include "game.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -165,7 +166,6 @@ void import_walls (scene* render_scene, char* path) {
 			break;
 		}
 		
-		printf ("%d, %d\n", x, z);
 		if (pos == 0) {
 			wall_idx = x;
 			num_verts = z;
@@ -227,7 +227,6 @@ void import_walls (scene* render_scene, char* path) {
 				glBindVertexArray (render_scene->vaos[idx]);
 				VBO* vertex_vbo = VBO_init (malloc (sizeof (VBO)), vert_arr, num_verts * sizeof (float) * 8 * 2, GL_ARRAY_BUFFER);
 				render_scene->vbos[render_scene->num_objs] = vertex_vbo->buffer_id;
-				printf ("MATERIAL ID: %d\n", abs (wall_idx) - 1);
 				render_scene->materials[render_scene->num_objs] = wall_mats[abs (wall_idx) - 1];
 				render_scene->obj_names[render_scene->num_objs] = "wall_strip";
 				glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -237,7 +236,6 @@ void import_walls (scene* render_scene, char* path) {
 				glVertexAttribPointer (2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof (float)));
 				glEnableVertexAttribArray (2);
 				render_scene->num_objs++;
-				printf ("%d,%d\n", x, z);
 				matrix_trans4 (&(render_scene->models[idx]), 0, 0.0, 0);
 				pos = 0;
 				tex_pos = 0;
@@ -250,4 +248,76 @@ void import_walls (scene* render_scene, char* path) {
 	}
 	wall_data = (v4*)geom->data;
 	num_walls = geom->length / sizeof (v4);
+}
+
+void import_objs (scene* render_scene, char* path) {
+	
+	material plant_mat, health_mat, bombs_mat, speed_mat, boots_mat, dmg_mat;
+	init_material (&plant_mat, "resources/plant.png", "resources/theme_5_specular.png");
+	init_material (&health_mat, "resources/health.png", "resources/theme_5_specular.png");
+	init_material (&bombs_mat, "resources/bombs.png", "resources/theme_5_specular.png");
+	init_material (&speed_mat, "resources/speed.png", "resources/theme_5_specular.png");
+	init_material (&boots_mat, "resources/boots.png", "resources/theme_5_specular.png");
+	init_material (&dmg_mat, "resources/dmg.png", "resources/theme_5_specular.png");
+	
+	FILE* file = fopen (path, "r");
+	int ret, x, z, obj_id, num_pts;
+	while (1) {
+		
+		//EOF check and obj id scan
+		ret = fscanf (file, "%d", &obj_id);
+		if (ret == EOF) {
+			break;
+		}
+
+		if (obj_id != 2) {
+			fscanf (file, "%d", &x);
+			fscanf (file, "%d", &z);
+		} else {
+			fscanf (file, "%d", &num_pts);
+			int i;
+			for (i = 0; i < num_pts; i++) {
+				fscanf (file, "%d", &x);
+				fscanf (file, "%d", &z);
+			}
+		}
+		
+		float fx, fz;
+		fx = x / 32;
+		fz = z / 32;
+		switch (obj_id) {
+			case 1:
+				init_enemy (render_scene, fx, fz);
+				break;
+			case 2:
+				//TODO door
+				break;
+			case 3:
+				init_decoration (render_scene, &plant_mat, fx, fz);
+				break;
+			case 4:
+				init_barrel (render_scene, fx, fz);
+				break;
+			case 5:
+				init_item (render_scene, &bombs_mat, NULL, fx, fz); //TODO callback func
+				break;
+			case 6:
+				init_item (render_scene, &health_mat, NULL, fx, fz); //TODO callback func
+				break;
+			case 7:
+				init_item (render_scene, &speed_mat, NULL, fx, fz); //TODO callback func
+				break;
+			case 8:
+				init_item (render_scene, &boots_mat, NULL, fx, fz); //TODO callback func
+				break;
+			case 9:
+				init_item (render_scene, &dmg_mat, NULL, fx, fz); //TODO callback func
+				break;
+			default:
+				break;
+				
+		}
+		
+	}
+	
 }

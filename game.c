@@ -10,11 +10,30 @@
 #include <stdlib.h>
 
 #define MAX_ENEMIES 128
+#define MAX_ITEMS 128
+#define MAX_BARRELS 128
+#define MAX_DECORATIONS 128
+#define MAX_DOORS 128
+
+material* enemy_material = NULL;
+material* barrel_material = NULL;
+material* door_material = NULL;
 
 game_object* enemy_list = NULL;
-GLuint* vbo_buffers = NULL;
-int num_enemies = 0;
-material* enemy_material = NULL;
+int num_enemies;
+
+game_object* item_list = NULL;
+void** item_collision_funcs = NULL;
+int num_items = 0;
+
+game_object* barrel_list = NULL;
+int num_barrels = 0;
+
+game_object* decoration_list = NULL;
+int num_decorations = 0;
+
+game_object* door_list = NULL;
+int num_doors = 0;
 
 void printfloats (float* loc, int amt) {
 	int i;
@@ -37,6 +56,15 @@ void game_logic_step (scene* s) {
 	for (i = 0; i < num_enemies; i++) {
 		billboard (&(enemy_list[i]), s, 2, 2);
 	}
+	for (i = 0; i < num_barrels; i++) {
+		billboard (&(barrel_list[i]), s, 2, 2);
+	}
+	for (i = 0; i < num_decorations; i++) {
+		billboard (&(decoration_list[i]), s, 2, 2);
+	}
+	for (i = 0; i < num_items; i++) {
+		billboard (&(item_list[i]), s, 2, 2);
+	}
 }
 
 //Object-specific functions
@@ -45,9 +73,6 @@ game_object* init_enemy (scene* s, float x, float y) {
 	//Init enemy material/list if not initialized
 	if (enemy_list == NULL) {
 		enemy_list = malloc (sizeof (game_object) * MAX_ENEMIES);
-	}
-	if (vbo_buffers == NULL) {
-		vbo_buffers = malloc (sizeof (game_object) * MAX_ENEMIES);
 	}
 	if (enemy_material == NULL) {
 		enemy_material = malloc (sizeof (material));
@@ -67,11 +92,71 @@ game_object* init_enemy (scene* s, float x, float y) {
 	
 }
 
+game_object* init_barrel (scene* s, float x, float y) {
+	
+	//Init enemy material/list if not initialized
+	if (barrel_list == NULL) {
+		barrel_list = malloc (sizeof (game_object) * MAX_BARRELS);
+	}
+	if (barrel_material == NULL) {
+		barrel_material = malloc (sizeof (material));
+		init_material (barrel_material, "resources/barrel.png", "resources/theme_5_specular.png");
+	}
+	
+	//Allocate barrel
+	game_object* tobj = &(barrel_list[num_barrels++]);
+	//Initialize barrel
+	init_game_object (tobj, s, barrel_material, 4, -1);
+	tobj->x = x;
+	tobj->y = y;
+	return tobj;
+	
+}
+
+game_object* init_item (scene* s, material* mat, void* callback, float x, float y) {
+	
+	//Init enemy material/list if not initialized
+	if (item_list == NULL) {
+		item_list = malloc (sizeof (game_object) * MAX_ITEMS);
+	}
+	if (item_collision_funcs == NULL) {
+		item_collision_funcs = malloc (sizeof (void*) * MAX_ITEMS);
+	}
+	
+	//Set the callback
+	item_collision_funcs[num_items] = callback;
+	//Allocate item
+	game_object* tobj = &(item_list[num_items++]);
+	//Initialize item
+	init_game_object (tobj, s, mat, 4, -1);
+	tobj->x = x;
+	tobj->y = y;
+	return tobj;
+	
+}
+
+game_object* init_decoration (scene* s, material* mat, float x, float y) {
+	
+	//Init enemy material/list if not initialized
+	if (decoration_list == NULL) {
+		decoration_list = malloc (sizeof (game_object) * MAX_DECORATIONS);
+	}
+	
+	//Allocate decoration
+	game_object* tobj = &(decoration_list[num_decorations++]);
+	//Initialize decoration
+	init_game_object (tobj, s, mat, 4, -1);
+	tobj->x = x;
+	tobj->y = y;
+	return tobj;
+	
+}
+
+//TODO init_door
+
 
 //Game object functions
 game_object* init_game_object (void* loc, scene* s, material* mat, int num_vertices, int render_obj_id) {
-	
-	printf ("%x\n", &(s->num_objs));
 	
 	//Cast
 	game_object* obj = (game_object*)loc;
@@ -148,18 +233,18 @@ void billboard (game_object* obj, scene* s, float width, float height) {
 	int i;
 	for (i = 0; i < 2; i++) {
 		//Vert 1 and 3
-		buffer[i * 16 + 0] = i == 0 ? -perp.x : perp.x;
+		buffer[i * 16 + 0] = i == 0 ? perp.x : -perp.x;
 		buffer[i * 16 + 1] = 0;
-		buffer[i * 16 + 2] = i == 0 ? -perp.z : perp.z;
+		buffer[i * 16 + 2] = i == 0 ? perp.z : -perp.z;
 		buffer[i * 16 + 3] = normal.x;
 		buffer[i * 16 + 4] = normal.y;
 		buffer[i * 16 + 5] = normal.z;
 		buffer[i * 16 + 6] = tex_x + i * tex_width;
 		buffer[i * 16 + 7] = 0;
 		//Vert 2 and 4
-		buffer[i * 16 + 8] = i == 0 ? -perp.x : perp.x;
+		buffer[i * 16 + 8] = i == 0 ? perp.x : -perp.x;
 		buffer[i * 16 + 9] = height;
-		buffer[i * 16 + 10] = i == 0 ? -perp.z : perp.z;
+		buffer[i * 16 + 10] = i == 0 ? perp.z : -perp.z;
 		buffer[i * 16 + 11] = normal.x;
 		buffer[i * 16 + 12] = normal.y;
 		buffer[i * 16 + 13] = normal.z;

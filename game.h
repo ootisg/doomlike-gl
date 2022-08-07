@@ -32,5 +32,8 @@ void billboard (game_object* obj, scene* s, float width, float height);
 
 //Object-specific inits
 game_object* init_enemy (scene* s, float x, float y);
+game_object* init_barrel (scene* s, float x, float y);
+game_object* init_item (scene* s, material* mat, void* callback, float x, float y);
+game_object* init_decoration (scene* s, material* mat, float x, float y);
 
 #endif

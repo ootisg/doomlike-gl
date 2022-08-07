@@ -118,10 +118,11 @@ void init () {
 	init_floor (&render_scene);
 	import_walls (&render_scene, "map.txt");
 	
-	int i;
-	for (i = 0; i < 3; i++) {
-		init_enemy (&render_scene, 34, 34 + i * 2);
-	}
+//	int i;
+//	for (i = 0; i < 3; i++) {
+//		init_enemy (&render_scene, 34, 34 + i);
+//	}
+	import_objs (&render_scene, "objs.txt");
 	
 	/*texture* tex1 = texture_load_from_file (malloc (sizeof (texture)), "resources/container2.png");
 	texture* tex2 = texture_load_from_file (malloc (sizeof (texture)), "resources/container2_specular.png");
