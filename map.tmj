@@ -1712,32 +1712,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":63,
-                 "name":"",
-                 "polyline":[
-                        {
-                         "x":0,
-                         "y":0
-                        }, 
-                        {
-                         "x":0,
-                         "y":64
-                        }],
-                 "properties":[
-                        {
-                         "name":"obj_type",
-                         "type":"string",
-                         "value":"door"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1728,
-                 "y":704
-                }, 
-                {
-                 "height":0,
                  "id":64,
                  "name":"",
                  "polyline":[
@@ -1761,32 +1735,6 @@
                  "width":0,
                  "x":2112,
                  "y":1152
-                }, 
-                {
-                 "height":0,
-                 "id":65,
-                 "name":"",
-                 "polyline":[
-                        {
-                         "x":0,
-                         "y":0
-                        }, 
-                        {
-                         "x":0,
-                         "y":64
-                        }],
-                 "properties":[
-                        {
-                         "name":"obj_type",
-                         "type":"string",
-                         "value":"door"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":2560,
-                 "y":704
                 }, 
                 {
                  "height":0,
@@ -2483,6 +2431,58 @@
                  "width":0,
                  "x":1856,
                  "y":1408
+                }, 
+                {
+                 "height":0,
+                 "id":104,
+                 "name":"",
+                 "polyline":[
+                        {
+                         "x":0,
+                         "y":0
+                        }, 
+                        {
+                         "x":0,
+                         "y":-64
+                        }],
+                 "properties":[
+                        {
+                         "name":"obj_id",
+                         "type":"string",
+                         "value":"door"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1728,
+                 "y":768
+                }, 
+                {
+                 "height":0,
+                 "id":105,
+                 "name":"",
+                 "polyline":[
+                        {
+                         "x":0,
+                         "y":0
+                        }, 
+                        {
+                         "x":0,
+                         "y":-64
+                        }],
+                 "properties":[
+                        {
+                         "name":"obj_id",
+                         "type":"string",
+                         "value":"door"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":2560,
+                 "y":768
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -2491,7 +2491,7 @@
          "y":0
         }],
  "nextlayerid":3,
- "nextobjectid":104,
+ "nextobjectid":106,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.8.5",

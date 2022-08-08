@@ -5,6 +5,7 @@
 #include "matrix.h"
 #include "camera.h"
 #include "buffers_gl.h"
+#include "room.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +38,7 @@ int num_decorations = 0;
 
 game_object* door_list = NULL;
 float* door_timers = NULL;
+v4** door_collisions = NULL;
 int num_doors = 0;
 
 void printfloats (float* loc, int amt) {
@@ -82,12 +84,13 @@ void game_logic_step (scene* s) {
 		//Animate doors going away
 		if (door_timers[i] != -1) {
 			float elapsed = glfwGetTime () - door_timers[i];
-			if (elapsed > 5.1) {
+			if (elapsed > 2.01) {
+				initv4 ((door_collisions[i]), 0, 0, -1, -1);
 				//Door is done
 			} else {
-				float y_offs = (elapsed / 5) * 2;
+				float y_offs = elapsed;
 				int rid = door_list[i].render_obj_id;
-				matrix_trans4 (&(s->models[rid]), 0, -elapsed, 0);
+				matrix_trans4 (&(s->models[rid]), 0, -y_offs, 0);
 			}
 		}
 		
@@ -186,16 +189,20 @@ game_object* init_door (scene* s, int door_type, float x1, float y1, float x2, f
 	if (door_list == NULL) {
 		door_list = malloc (sizeof (game_object) * MAX_DOORS);
 		door_timers = malloc (sizeof (float) * MAX_DOORS);
+		door_collisions = malloc (sizeof (float) * MAX_DOORS);
 	}
 	if (door_material == NULL) {
 		door_material = malloc (sizeof (material));
 		init_material (door_material, "resources/door.png", "resources/theme_5_specular.png");
 	}
 	
-	//Allocate decoration
+	//Allocate door
 	door_timers[num_doors] = -1;
+	v4 collision_data;
+	initv4 (&collision_data, x1, y1, x2, y2);
+	door_collisions[num_doors] = add_wall (&collision_data);
 	game_object* tobj = &(door_list[num_doors++]);
-	//Initialize decoration
+	//Initialize door
 	init_game_object (tobj, s, door_material, 4, -1);
 	tobj->x = (x1 + x2) / 2;
 	tobj->y = (y1 + y2) / 2;

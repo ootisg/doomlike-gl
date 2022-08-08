@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define MAX_WALLS 512
+
 v4* wall_data;
 int num_walls;
 
@@ -156,7 +158,8 @@ void import_walls (scene* render_scene, char* path) {
 	int strip;
 	int altern = 0;
 	float tex_pos = 0;
-	char_buffer* geom = make_char_buffer ();
+	wall_data = malloc (sizeof (v4) * MAX_WALLS);
+	num_walls = 0;
 	while (1) {
 		fscanf (file, "%d", &x);
 		ret = fscanf (file, "%d", &z);
@@ -173,6 +176,7 @@ void import_walls (scene* render_scene, char* path) {
 			//Wall initialization here
 			pos++;
 			render_scene->mesh_sizes[render_scene->num_objs] = num_verts * 2;
+			
 		} else {
 			//Add vertex here
 			if (pos != 1) {
@@ -181,7 +185,7 @@ void import_walls (scene* render_scene, char* path) {
 				line.y = wall_idx > 0 ? last_z : z / 32;
 				line.z = wall_idx > 0 ? x / 32 : last_x;
 				line.w = wall_idx > 0 ? z / 32 : last_z;
-				char_buffer_add_item (geom, &line, sizeof (v4));
+				wall_data[num_walls++] = line;
 			}
 			v3 curr, last, a, b, c;
 			initv3 (&curr, x / 32, 0, z / 32);
@@ -246,8 +250,12 @@ void import_walls (scene* render_scene, char* path) {
 		last_x = x / 32;
 		last_z = z / 32;
 	}
-	wall_data = (v4*)geom->data;
-	num_walls = geom->length / sizeof (v4);
+}
+
+v4* add_wall (v4* data) {
+	v4* curr = &(wall_data[num_walls++]);
+	*curr = *data;
+	return curr;
 }
 
 void import_objs (scene* render_scene, char* path) {
