@@ -70,5 +70,7 @@ void camera_scroll_callback (GLFWwindow* window, double xoffset, double yoffset)
 void camera_process_key_inputs ();
 /// Returns non-zero if the flashlight is active
 int flashlight_active ();
+/// Returns non-zero if the player is shooting
+int shooting ();
 
 #endif

@@ -6,6 +6,7 @@
 #include "camera.h"
 #include "buffers_gl.h"
 #include "room.h"
+#include "render_info.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,10 +21,12 @@
 #define MAX_DOORS 128
 
 material* enemy_material = NULL;
+material* enemy_dead_material = NULL;
 material* barrel_material = NULL;
 material* door_material = NULL;
 
 game_object* enemy_list = NULL;
+float* enemies_health;
 int num_enemies;
 
 game_object* item_list = NULL;
@@ -58,9 +61,125 @@ float obj_verticess[] = {
 
 //Game logic
 void game_logic_step (scene* s) {
+	
 	int i;
+	//ENEMY LOGIC. No optimizations here, since the # of enemies is always < 20
 	for (i = 0; i < num_enemies; i++) {
-		billboard (&(enemy_list[i]), s, 2, 2);
+		
+		//Get the current enemy
+		game_object* curr = &(enemy_list[i]);
+		
+		//Only run enemy logic if enemy isn't dead
+		if (enemies_health[i] > 0.0f) {
+			
+			//Get the current camera (camera position = player position)
+			camera* cam = get_active_camera ();
+			
+			//Check for line-of-sight to the player
+			v4 sight_line;
+			initv4 (&sight_line, curr->x, curr->y, cam->pos.x, cam->pos.z);
+			int has_los = 1;
+			int j;
+			for (j = 0; j < get_num_walls (); j++) {
+				v4* curr_wall = &(get_wall_data ()[j]);
+				v2 res;
+				if (lines_colliding (&res, curr_wall, &sight_line)) { //Argument order matters due to incorrect handling of special case in lines_colliding
+					has_los = 0;
+					break;
+				}
+			}
+			//Move toward player if further than .5 units and has LOS
+			if (has_los) {
+				float dist = sqrt ((curr->x - cam->pos.x) * (curr->x - cam->pos.x) + (curr->y - cam->pos.z) * (curr->y - cam->pos.z));
+				if (dist >= 0.5) {
+					//Move towards player
+					float enemy_speed = 3.0;
+					v2 dir_vec;
+					initv2 (&dir_vec, curr->x - cam->pos.x, curr->y - cam->pos.z);
+					vector_normalize2 (&dir_vec, &dir_vec);
+					vector_scale2 (&dir_vec, &dir_vec, -enemy_speed * frame_delta_time ());
+					curr->x += dir_vec.x;
+					curr->y += dir_vec.y;
+					//Move away from other enemies (prevents grouping)
+					float force_coeff = .003;
+					int k;
+					for (k = 0; k < num_enemies; k++) {
+						if (k != i) {
+							game_object* other = &(enemy_list[k]);
+							float enemy_dist = sqrt ((curr->x - other->x) * (curr->x - other->x) + (curr->y - other->y) * (curr->y - other->y));
+							if (enemy_dist < 3) {
+								v2 force_vec;
+								initv2 (&force_vec, curr->x - other->x, curr->y - other->y);
+								vector_normalize2 (&force_vec, &force_vec);
+								vector_scale2 (&force_vec, &force_vec, (1 / (enemy_dist * enemy_dist)) * force_coeff);
+								curr->x += force_vec.x;
+								curr->y += force_vec.y;
+							}
+						}
+					}
+				} else {
+					printf ("PLAYER HIT!\n");
+				}
+			}
+			
+			//Detect if shot at
+			if (shooting ()) {
+				
+				//Hitbox detection (sort of)
+				v2 colliding_pt;
+				v2 shoot_vec, shoot_dir;
+				initv2 (&shoot_dir, cam->dir.x, cam->dir.z);
+				vector_scale2 (&shoot_vec, &shoot_dir, -100);
+				v4 shoot_line;
+				initv4 (&shoot_line, cam->pos.x, cam->pos.z, cam->pos.x + shoot_vec.x, cam->pos.z + shoot_vec.y);
+				float hbox_size = .5;
+				v4 hblines[2];
+				initv4 (&(hblines[0]), curr->x - hbox_size, curr->y - hbox_size, curr->x + hbox_size, curr->y + hbox_size);
+				initv4 (&(hblines[1]), curr->x + hbox_size, curr->y - hbox_size, curr->x - hbox_size, curr->y + hbox_size);
+				int j;
+				int hbox_collided = 0;
+				for (j = 0; j < 2; j++) {
+					if (lines_colliding (&colliding_pt, &shoot_line, &(hblines[j]))) {
+						hbox_collided = 1;
+					}
+				}
+				
+				//Check for walls between player and enemy
+				if (hbox_collided) {
+					float max_dist = 100;
+					for (j = 0; j < get_num_walls (); j++) {
+						v4* curr_wall = &(get_wall_data ()[j]);
+						if (lines_colliding (&colliding_pt, curr_wall, &shoot_line)) {
+							v2 collision_vec;
+							v2 cam_pos;
+							initv2 (&cam_pos, cam->pos.x, cam->pos.z);
+							vector_diff2 (&collision_vec, &cam_pos, &(colliding_pt));
+							float dist = sqrt (collision_vec.x * collision_vec.x + collision_vec.y * collision_vec.y);
+							if (dist < max_dist) {
+								max_dist = dist;
+							}
+						}
+					}
+					float dist_to_enemy = sqrt ((curr->x - cam->pos.x) * (curr->x - cam->pos.x) + (curr->y - cam->pos.z) * (curr->y - cam->pos.z));
+					if (max_dist > dist_to_enemy) {
+						//Enemy was hit
+						//Damage enemy
+						printf ("HIT %d\n", i);
+						enemies_health[i] -= 20.0f;
+						//Handle enemy death
+						if (enemies_health[i] <= 0.0f) {
+							s->materials[curr->render_obj_id] = *enemy_dead_material;
+							curr->start_time = glfwGetTime ();
+							curr->repeat_anim = 0;
+						}
+					}
+				}
+			}
+		}
+		
+		//Billboard the enemy to face the player
+		billboard (curr, s, 2, 2);
+		
 	}
 	for (i = 0; i < num_barrels; i++) {
 		billboard (&(barrel_list[i]), s, 2, 2);
@@ -103,19 +222,24 @@ game_object* init_enemy (scene* s, float x, float y) {
 	//Init enemy material/list if not initialized
 	if (enemy_list == NULL) {
 		enemy_list = malloc (sizeof (game_object) * MAX_ENEMIES);
+		enemies_health = malloc (sizeof (int) * MAX_ENEMIES);
 	}
 	if (enemy_material == NULL) {
 		enemy_material = malloc (sizeof (material));
+		enemy_dead_material = malloc (sizeof (material));
 		init_material (enemy_material, "resources/demon_idle.png", "resources/theme_5_specular.png");
+		init_material (enemy_dead_material, "resources/demon_death.png", "resources/theme_5_specular.png");
 	}
 	
 	//Allocate enemy
+	enemies_health[num_enemies] = 100.0;
 	game_object* tobj = &(enemy_list[num_enemies++]);
 	//Initialize enemy
 	init_game_object (tobj, s, enemy_material, 4, -1);
 	tobj->x = x;
 	tobj->y = y;
 	tobj->is_animated = 1;
+	tobj->repeat_anim = 1;
 	tobj->num_frames = 6;
 	tobj->frame_time = .1;
 	return tobj;
@@ -309,7 +433,7 @@ void billboard (game_object* obj, scene* s, float width, float height) {
 		tex_width = 1.0 / obj->num_frames;
 		float dt = glfwGetTime () - obj->start_time;
 		int frames_elapsed = dt / obj->frame_time;
-		int curr_frame = frames_elapsed % obj->num_frames;
+		int curr_frame = obj->repeat_anim ? frames_elapsed % obj->num_frames : (frames_elapsed > obj->num_frames - 1 ? obj->num_frames - 1 : frames_elapsed);
 		tex_x = tex_width * curr_frame;
 	}
 	

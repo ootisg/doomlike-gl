@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#define SHOOT_COOLDOWN 1.0
+
 camera* active_camera = NULL;
 
 float last_x = 0;
@@ -16,9 +18,12 @@ float last_w_time = 0;
 float last_w_press = 0;
 int w_down = 0;
 int f_down = 0;
+int space_down = 0;
 int speedup = 0;
 
 int flashlight = 0;
+int shoot = 0;
+float last_shoot = 0;
 
 camera* camera_init (void* loc) {
 	
@@ -71,6 +76,10 @@ mat4* camera_get_proj_matrix (camera* cam) {
 
 int flashlight_active () {
 	return flashlight;
+}
+
+int shooting () {
+	return shoot;
 }
 
 void camera_mouse_callback (GLFWwindow* window, double xpos, double ypos) {
@@ -232,6 +241,20 @@ void camera_process_key_inputs () {
 				}
 			}
 			#endif
+		}
+		
+		shoot = 0; //Shoot for 1 frame
+		if (key_down (GLFW_KEY_SPACE)) {
+			if (space_down == 0) {
+				if (last_shoot == 0 || glfwGetTime () - last_shoot > SHOOT_COOLDOWN) {
+					shoot = 1;
+					printf ("SHOOT!\n");
+					last_shoot = glfwGetTime ();
+				}
+			}
+			space_down = 1;
+		} else {
+			space_down = 0;
 		}
 		
 		//Space and shift for up and down movement

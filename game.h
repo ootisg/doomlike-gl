@@ -11,6 +11,7 @@ struct game_object {
 	//Animation info
 	int is_animated;
 	int num_frames;
+	int repeat_anim;
 	float frame_time;
 	float start_time;
 	
