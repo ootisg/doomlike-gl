@@ -188,7 +188,25 @@ void game_logic_step (scene* s) {
 		billboard (&(decoration_list[i]), s, 2, 2);
 	}
 	for (i = 0; i < num_items; i++) {
-		billboard (&(item_list[i]), s, 2, 2);
+		
+		//Get the current item
+		game_object* curr = &(item_list[i]);
+		
+		//Get the current camera (camera position = player position)
+		camera* cam = get_active_camera ();
+		
+		//Check for collision
+		float dist = sqrt ((cam->pos.x - curr->x) * (cam->pos.x - curr->x) + (cam->pos.z - curr->y) * (cam->pos.z - curr->y));
+		if (dist < 1) {
+			//TODO callback
+			printf ("PICKED UP ITEM!\n");
+			curr->x = -1;
+			curr->y = -1;
+		}
+		
+		//Billboard the items to face the player
+		billboard (curr, s, 2, 2);
+		
 	}
 	for (i = 0; i < num_doors; i++) {
 		
