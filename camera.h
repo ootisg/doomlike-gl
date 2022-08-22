@@ -72,5 +72,13 @@ void camera_process_key_inputs ();
 int flashlight_active ();
 /// Returns non-zero if the player is shooting
 int shooting ();
+/// Returns non-zero if the player is attempting to use a bomb
+int bombing ();
+/// Returns non-zero if the player is attempting to use a speed boost
+int speeding ();
+/// Sets the speedup timer to the given # of seconds
+void set_speedup_timer (float time);
+/// Sets the player's base speed to the given amount (used for boots)
+void set_player_speed (float amt);
 
 #endif

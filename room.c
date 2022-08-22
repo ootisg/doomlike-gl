@@ -306,19 +306,19 @@ void import_objs (scene* render_scene, char* path) {
 				init_barrel (render_scene, fx, fz);
 				break;
 			case 5:
-				init_item (render_scene, &bombs_mat, NULL, fx, fz); //TODO callback func
+				init_item (render_scene, &bombs_mat, bomb_callback, fx, fz);
 				break;
 			case 6:
-				init_item (render_scene, &health_mat, NULL, fx, fz); //TODO callback func
+				init_item (render_scene, &health_mat, health_callback, fx, fz);
 				break;
 			case 7:
-				init_item (render_scene, &speed_mat, NULL, fx, fz); //TODO callback func
+				init_item (render_scene, &speed_mat, speed_callback, fx, fz);
 				break;
 			case 8:
-				init_item (render_scene, &boots_mat, NULL, fx, fz); //TODO callback func
+				init_item (render_scene, &boots_mat, boots_callback, fx, fz);
 				break;
 			case 9:
-				init_item (render_scene, &dmg_mat, NULL, fx, fz); //TODO callback func
+				init_item (render_scene, &dmg_mat, dmg_callback, fx, fz);
 				break;
 			default:
 				break;

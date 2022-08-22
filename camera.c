@@ -1,6 +1,7 @@
 #include "camera.h"
 #include "render_info.h"
 #include "room.h"
+#include "game.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -18,12 +19,19 @@ float last_w_time = 0;
 float last_w_press = 0;
 int w_down = 0;
 int f_down = 0;
+int q_down = 0;
+int shift_down = 0;
 int space_down = 0;
 int speedup = 0;
 
 int flashlight = 0;
 int shoot = 0;
+int bomb = 0;
+int speed_boost = 0;
 float last_shoot = 0;
+
+float speedup_timer = 0;
+float player_speed = 2.5f;
 
 camera* camera_init (void* loc) {
 	
@@ -80,6 +88,22 @@ int flashlight_active () {
 
 int shooting () {
 	return shoot;
+}
+
+int bombing () {
+	return bomb;
+}
+
+int speeding () {
+	return speed_boost;
+}
+
+void set_speedup_timer (float time) {
+	speedup_timer = time;
+}
+
+void set_player_speed (float amt) {
+	player_speed = amt;
 }
 
 void camera_mouse_callback (GLFWwindow* window, double xpos, double ypos) {
@@ -155,7 +179,7 @@ void camera_process_key_inputs () {
 		//WASD movement
 		int moved = 0;
 		v3 scaled;
-		float camera_speed = frame_delta_time () * (speedup ? 5 : 2.5);
+		float camera_speed = frame_delta_time () * ((speedup ? player_speed * 2 : player_speed) + (speedup_timer > 0 ? 5 : 0));
 		if (key_down (GLFW_KEY_W)) {
 			//Down edge of w press detection
 			if (!w_down) {
@@ -257,6 +281,28 @@ void camera_process_key_inputs () {
 			space_down = 0;
 		}
 		
+		//Item keys
+		#ifndef DEBUG_MODE
+		bomb = 0; //Bomb for 1 frame
+		if (key_down (GLFW_KEY_LEFT_SHIFT)) {
+			if (!space_down) {
+				bomb = 1;
+			}
+			space_down = 1;
+		} else {
+			space_down = 0;
+		}
+		speed_boost = 0; //Speed boost for 1 frame
+		if (key_down (GLFW_KEY_Q)) {
+			if (!q_down) {
+				speed_boost = 1;
+			}
+			q_down = 1;
+		} else {
+			q_down = 0;
+		}
+		#endif
+		
 		//Space and shift for up and down movement
 		#ifdef DEBUG_MODE
 		if (key_down (GLFW_KEY_SPACE)) {
@@ -269,6 +315,11 @@ void camera_process_key_inputs () {
 		}
 		#endif
 		
+	}
+	
+	//Handle the speedup timer
+	if (speedup_timer > 0) {
+		speedup_timer -= frame_delta_time ();
 	}
 	
 }

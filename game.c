@@ -44,6 +44,34 @@ float* door_timers = NULL;
 v4** door_collisions = NULL;
 int num_doors = 0;
 
+int bomb_count = 0;
+int speed_count = 0;
+float health = 100.0f;
+int has_dmg = 0;
+
+void bomb_callback () {
+	bomb_count++;
+}
+
+void speed_callback () {
+	speed_count++;
+}
+
+void health_callback () {
+	health += 50.0f;
+	if (health >= 100.0f) {
+		health = 100.0f;
+	}
+}
+
+void boots_callback () {
+	set_player_speed (4);
+}
+
+void dmg_callback () {
+	has_dmg = 1;
+}
+
 void printfloats (float* loc, int amt) {
 	int i;
 	for (i = 0; i < amt; i++) {
@@ -62,8 +90,21 @@ float obj_verticess[] = {
 //Game logic
 void game_logic_step (scene* s) {
 	
-	int i;
+	//Handle speedup usage
+	if (speeding () && speed_count > 0) {
+		set_speedup_timer (7);
+		speed_count--;
+	}
+	
+	//Handle bomb count logic
+	int using_bomb = 0;
+	if (bombing () && bomb_count > 0) {
+		using_bomb = 1;
+		bomb_count--;
+	}
+	
 	//ENEMY LOGIC. No optimizations here, since the # of enemies is always < 20
+	int i;
 	for (i = 0; i < num_enemies; i++) {
 		
 		//Get the current enemy
@@ -90,6 +131,16 @@ void game_logic_step (scene* s) {
 			}
 			//Move toward player if further than .5 units and has LOS
 			if (has_los) {
+				
+				//Kill enemies if player used bomb
+				if (using_bomb) {
+					enemies_health[i] = 0.0f;
+					s->materials[curr->render_obj_id] = *enemy_dead_material;
+					curr->start_time = glfwGetTime ();
+					curr->repeat_anim = 0;
+				}
+				
+				//Enemy AI
 				float dist = sqrt ((curr->x - cam->pos.x) * (curr->x - cam->pos.x) + (curr->y - cam->pos.z) * (curr->y - cam->pos.z));
 				if (dist >= 0.5) {
 					//Move towards player
@@ -165,7 +216,7 @@ void game_logic_step (scene* s) {
 						//Enemy was hit
 						//Damage enemy
 						printf ("HIT %d\n", i);
-						enemies_health[i] -= 20.0f;
+						enemies_health[i] -= has_dmg ? 34.0f : 20.0f;
 						//Handle enemy death
 						if (enemies_health[i] <= 0.0f) {
 							s->materials[curr->render_obj_id] = *enemy_dead_material;
@@ -199,7 +250,8 @@ void game_logic_step (scene* s) {
 		float dist = sqrt ((cam->pos.x - curr->x) * (cam->pos.x - curr->x) + (cam->pos.z - curr->y) * (cam->pos.z - curr->y));
 		if (dist < 1) {
 			//TODO callback
-			printf ("PICKED UP ITEM!\n");
+			void (*callback_func)(void) = item_collision_funcs[i];
+			callback_func ();
 			curr->x = -1;
 			curr->y = -1;
 		}

@@ -38,4 +38,11 @@ game_object* init_item (scene* s, material* mat, void* callback, float x, float 
 game_object* init_decoration (scene* s, material* mat, float x, float y);
 game_object* init_door (scene* s, int door_type, float x1, float y1, float x2, float y2);
 
+//Item callbacks
+void bomb_callback ();
+void speed_callback ();
+void health_callback ();
+void boots_callback ();
+void dmg_callback ();
+
 #endif
